@@ -20,6 +20,7 @@ import cats.effect.IO
 import cats.effect.kernel.Async
 import cats.effect.kernel.Ref
 import org.scalajs.dom
+import cats.syntax.all.*
 
 import scala.scalajs.js
 import js.annotation._
@@ -192,6 +193,12 @@ class HtmlAreaElement[F[_]] protected () extends HtmlElement[F]
 @JSGlobal("HTMLAudioElement")
 @js.native
 class HtmlAudioElement[F[_]] protected () extends HtmlElement[F]
+object HtmlAudioElement {
+  implicit def ops[F[_]](element: HtmlAudioElement[F]): Ops[F] =
+    new Ops(element.asInstanceOf[dom.HTMLAudioElement])
+
+  final class Ops[F[_]] private[HtmlAudioElement] (private val audio: dom.HTMLAudioElement) {}
+}
 
 @JSGlobal("HTMLBaseElement")
 @js.native
@@ -308,6 +315,27 @@ class HtmlOListElement[F[_]] protected () extends HtmlElement[F]
 @js.native
 class HtmlOptGroupElement[F[_]] protected () extends HtmlElement[F]
 
+@JSGlobal("HTMLMediaElement")
+@js.native
+class HtmlMediaElement[F[_]] protected () extends HtmlElement[F]
+object HtmlMediaElement {
+
+  implicit def toJS[F[_]](elem: HtmlMediaElement[F]): dom.HTMLMediaElement = elem.asInstanceOf[dom.HTMLMediaElement]
+
+  implicit def ops[F[_]](elem: HtmlMediaElement[F]): Ops[F] =
+    new Ops(elem)
+
+  final class Ops[F[_]] private[HtmlMediaElement] (private val media: dom.HTMLMediaElement)
+      extends AnyVal {
+    def play(implicit F: Dom[F]): F[Unit] =
+      F.delay(media.play().toOption).flatMap {
+        case Some(p) => F.fromPromise(F.pure(p))
+        case None    => F.unit
+      }
+
+    def load(implicit F: Dom[F]): F[Unit] = F.delay(media.load())
+  }
+}
 @JSGlobal("HTMLOptionElement")
 @js.native
 class HtmlOptionElement[F[_]] protected () extends HtmlElement[F]
