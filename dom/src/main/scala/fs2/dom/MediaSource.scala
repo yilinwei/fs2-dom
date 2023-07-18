@@ -39,11 +39,11 @@ object MediaSource {
 //TODO: Upstream
 @JSGlobal
 @js.native
-class BaseAudioContext[F[_]] extends js.Any
+class BaseAudioContext[F[_]] protected () extends js.Any
 
 @JSGlobal
 @js.native
-class AudioContext[F[_]] extends BaseAudioContext[F]
+class AudioContext[F[_]] protected () extends BaseAudioContext[F]
 
 object AudioContext {
 
@@ -75,7 +75,9 @@ object AudioContext {
   }
 }
 
-trait AudioNode[F[_]] extends js.Any
+@JSGlobal
+@js.native
+class AudioNode[F[_]] protected () extends js.Any
 object AudioNode {
 
   private[dom] implicit def toJS[F[_]](ctx: AudioNode[F]): dom.AudioNode = ctx.asInstanceOf[dom.AudioNode]
@@ -91,7 +93,9 @@ object AudioNode {
   }
 }
 
-trait MediaElementAudioSourceNode[F[_]] extends AudioNode[F]
+@JSGlobal
+@js.native
+class MediaElementAudioSourceNode[F[_]] protected () extends AudioNode[F]
 object MediaElementAudioSourceNode {
 
   private[dom] implicit def fromJS[F[_]](ctx: dom.MediaElementAudioSourceNode): MediaElementAudioSourceNode[F] =

@@ -325,6 +325,8 @@ object HtmlMediaElement {
   implicit def ops[F[_]](elem: HtmlMediaElement[F]): Ops[F] =
     new Ops(elem)
 
+  import Dom._
+
   final class Ops[F[_]] private[HtmlMediaElement] (private val media: dom.HTMLMediaElement)
       extends AnyVal {
     def play(implicit F: Dom[F]): F[Unit] =
