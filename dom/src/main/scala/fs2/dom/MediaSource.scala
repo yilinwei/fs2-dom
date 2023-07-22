@@ -166,7 +166,7 @@ object AudioScheduledSourceNode {
       node: AudioScheduledSourceNode[F]
   ): dom.AudioScheduledSourceNode = node.asInstanceOf[dom.AudioScheduledSourceNode]
 
-  implicit def ops[F[_]](node: dom.AudioScheduledSourceNode): Ops[F] = new Ops(node)
+  implicit def ops[F[_]](node: AudioScheduledSourceNode[F]): Ops[F] = new Ops(node)
 
   final class Ops[F[_]] private[AudioScheduledSourceNode] (
       private val node: dom.AudioScheduledSourceNode
@@ -197,6 +197,12 @@ object MediaElementAudioSourceNode {
       ctx: dom.MediaElementAudioSourceNode
   ): MediaElementAudioSourceNode[F] =
     ctx.asInstanceOf[MediaElementAudioSourceNode[F]]
+
+  private[dom] implicit def toJS[F[_]](
+      node: MediaElementAudioSourceNode[F]
+  ): dom.MediaElementAudioSourceNode = node.asInstanceOf[dom.MediaElementAudioSourceNode]
+
+  implicit def ops[F[_]](node: MediaElementAudioSourceNode[F]): Ops[F] = new Ops(node)
 
   final class Ops[F[_]] private[MediaElementAudioSourceNode] (
       private val node: dom.MediaElementAudioSourceNode
