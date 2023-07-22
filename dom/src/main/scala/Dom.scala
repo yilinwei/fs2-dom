@@ -192,12 +192,9 @@ class HtmlAreaElement[F[_]] protected () extends HtmlElement[F]
 
 @JSGlobal("HTMLAudioElement")
 @js.native
-class HtmlAudioElement[F[_]] protected () extends HtmlElement[F]
+class HtmlAudioElement[F[_]] protected () extends HtmlMediaElement[F]
 object HtmlAudioElement {
-  implicit def ops[F[_]](element: HtmlAudioElement[F]): Ops[F] =
-    new Ops(element.asInstanceOf[dom.HTMLAudioElement])
-
-  final class Ops[F[_]] private[HtmlAudioElement] (private val audio: dom.HTMLAudioElement) {}
+  def apply[F[_]]: HtmlAudioElement[F] = new dom.Audio().asInstanceOf[HtmlAudioElement[F]]
 }
 
 @JSGlobal("HTMLBaseElement")
@@ -320,15 +317,32 @@ class HtmlOptGroupElement[F[_]] protected () extends HtmlElement[F]
 class HtmlMediaElement[F[_]] protected () extends HtmlElement[F]
 object HtmlMediaElement {
 
-  implicit def toJS[F[_]](elem: HtmlMediaElement[F]): dom.HTMLMediaElement = elem.asInstanceOf[dom.HTMLMediaElement]
+  private[dom] implicit def toJS[F[_]](elem: HtmlMediaElement[F]): dom.HTMLMediaElement =
+    elem.asInstanceOf[dom.HTMLMediaElement]
+
+  private[dom] implicit def fromJS[F[_]](elem: dom.HTMLMediaElement): HtmlMediaElement[F] =
+    elem.asInstanceOf[HtmlMediaElement[F]]
 
   implicit def ops[F[_]](elem: HtmlMediaElement[F]): Ops[F] =
     new Ops(elem)
 
+  // TODO:: check
   import Dom._
 
   final class Ops[F[_]] private[HtmlMediaElement] (private val media: dom.HTMLMediaElement)
       extends AnyVal {
+
+    def src(implicit F: Dom[F]): Ref[F, Option[String]] =
+      new WrappedRef[F, Option[String]](
+        () => {
+          val src = media.src
+          Option.unless(src == "")(src)
+        },
+        opt => media.src = opt.getOrElse("")
+      )(F)
+
+    def currentSrc(implicit F: Dom[F]): F[String] = F.delay(media.currentSrc)
+
     def play(implicit F: Dom[F]): F[Unit] =
       F.delay(media.play().toOption).flatMap {
         case Some(p) => F.fromPromise(F.pure(p))

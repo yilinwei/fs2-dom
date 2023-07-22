@@ -73,25 +73,11 @@ object Window {
       def document: HtmlDocument[F] = window.document.asInstanceOf[HtmlDocument[F]]
 
       def domContentLoaded: F[Unit] =
-        F.asyncCheckAttempt { cb =>
-          F.delay {
-            val ctrl = new dom.AbortController
-            val document = window.document
-            if (document.readyState == dom.DocumentReadyState.loading) {
-              window.addEventListener(
-                "DOMContentLoaded",
-                (_: Any) => cb(Either.unit),
-                new dom.EventListenerOptions {
-                  once = true
-                  signal = ctrl.signal
-                }
-              )
-              Left(Some(F.delay(ctrl.abort())))
-            } else {
-              Either.unit
-            }
-          }
-        }
+        EventTargetHelpers.listenOnceAttemptDiscard[F, dom.Window](
+          window,
+          "DOMContentLoaded",
+          _.document.readyState == dom.DocumentReadyState.loading
+        )
 
       def requestAnimationFrame: F[FiniteDuration] = F.async[FiniteDuration] { cb =>
         F.delay {
