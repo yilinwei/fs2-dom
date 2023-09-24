@@ -191,7 +191,7 @@ object MediaElementAudioSourceNode {
   def apply[F[_]](
       ctx: AudioContext[F],
       options: dom.MediaElementAudioSourceNodeOptions
-  ): MediaElementAudioSourceNode[F] = new dom.MediaElementAudioSourceNode(ctx, options)
+  ): MediaElementAudioSourceNode[F] = dom.MediaElementAudioSourceNode(ctx, options)
 
   private[dom] implicit def fromJS[F[_]](
       ctx: dom.MediaElementAudioSourceNode
@@ -255,9 +255,9 @@ object GainNode {
 
   implicit def ops[F[_]](node: GainNode[F]): Ops[F] = new Ops(node)
 
-  def apply[F[_]](ctx: AudioContext[F]): GainNode[F] = new dom.GainNode(ctx)
+  def apply[F[_]](ctx: AudioContext[F]): GainNode[F] = dom.GainNode(ctx)
   def apply[F[_]](ctx: AudioContext[F], options: dom.GainNodeOptions): GainNode[F] =
-    new dom.GainNode(ctx, options)
+     dom.GainNode(ctx, options)
 
   private[dom] implicit def fromJS[F[_]](node: dom.GainNode): GainNode[F] =
     node.asInstanceOf[GainNode[F]]
@@ -279,7 +279,7 @@ object AudioBufferSourceNode {
       ctx: AudioContext[F],
       options: dom.AudioBufferSourceNodeOptions
   ): AudioBufferSourceNode[F] =
-    new dom.AudioBufferSourceNode(ctx, options)
+     dom.AudioBufferSourceNode(ctx, options)
 
   private[dom] implicit def toJS[F[_]](node: AudioBufferSourceNode[F]): dom.AudioBufferSourceNode =
     node.asInstanceOf[dom.AudioBufferSourceNode]
