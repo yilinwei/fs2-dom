@@ -119,12 +119,12 @@ object AudioContext {
       .make(F.delay(new dom.AudioContext()))(new Ops[F](_).close)
       .map(fromJS)
 
-  def apply[F[_]](
-      options: dom.AudioContextOptions
-  )(implicit F: Async[F]): Resource[F, AudioContext[F]] =
-    Resource
-      .make(F.delay(new dom.AudioContext(options)))(new Ops[F](_).close)
-      .map(fromJS)
+  // def apply[F[_]](
+  //     options: dom.AudioContextOptions
+  // )(implicit F: Async[F]): Resource[F, AudioContext[F]] =
+  //   Resource
+  //     .make(F.delay(new dom.AudioContext(options)))(new Ops[F](_).close)
+  //     .map(fromJS)
 
   implicit def ops[F[_]](ctx: AudioContext[F]): Ops[F] = new Ops(ctx)
 
@@ -132,6 +132,59 @@ object AudioContext {
     def resume(implicit F: Async[F]): F[Unit] = F.fromPromise(F.delay(ctx.resume()))
     def suspend(implicit F: Async[F]): F[Unit] = F.fromPromise(F.delay(ctx.suspend()))
     def close(implicit F: Async[F]): F[Unit] = F.fromPromise(F.delay(ctx.close()))
+    def createMediaStreamSource(stream: dom.MediaStream)(implicit F: Async[F]): F[MediaStreamAudioSourceNode[F]] = F.delay(ctx.createMediaStreamSource(stream))
+    def createMediaStreamDestination()(implicit F: Async[F]): F[MediaStreamAudioDestinationNode[F]] = F.delay(ctx.createMediaStreamDestination())
+  }
+}
+
+@JSGlobal
+@js.native
+class OfflineAudioContext[F[_]] protected () extends BaseAudioContext[F]
+
+object OfflineAudioContext {
+
+  private[dom] implicit def fromJS[F[_]](ctx: dom.OfflineAudioContext): OfflineAudioContext[F] =
+    ctx.asInstanceOf[OfflineAudioContext[F]]
+
+  private[dom] implicit def toJS[F[_]](ctx: OfflineAudioContext[F]): dom.OfflineAudioContext =
+    ctx.asInstanceOf[dom.OfflineAudioContext]
+
+  def apply[F[_]](numChannels: Int, length: Int, sampleRate: Int)(implicit F: Async[F]): F[OfflineAudioContext[F]] =
+    F.delay(new dom.OfflineAudioContext(numChannels, length, sampleRate)).map(fromJS)
+
+  implicit def ops[F[_]](ctx: OfflineAudioContext[F]): Ops[F] = new Ops(ctx)
+
+  final class Ops[F[_]] private[OfflineAudioContext] (private val ctx: dom.OfflineAudioContext) {
+    def suspend(suspendTime: Float)(implicit F: Async[F]): F[Unit] = F.fromPromise(F.delay(ctx.suspend(suspendTime)))
+    // def resume(implicit F: Async[F]): F[Unit] = F.fromPromise(F.delay(ctx.resume()))
+    def startRendering(implicit F: Async[F]): F[dom.AudioBuffer] = F.fromPromise(F.delay(ctx.startRendering()))
+  }
+}
+
+@JSGlobal
+@js.native
+class MediaRecorder[F[_]] protected () extends js.Any
+object MediaRecorder {
+  private[dom] implicit def fromJS[F[_]](recorder: dom.MediaRecorder): MediaRecorder[F] =
+    recorder.asInstanceOf[MediaRecorder[F]]
+
+  private[dom] implicit def toJS[F[_]](recorder: MediaRecorder[F]): dom.MediaRecorder =
+    recorder.asInstanceOf[dom.MediaRecorder]
+
+  def apply[F[_]](stream: dom.MediaStream): MediaRecorder[F] = new dom.MediaRecorder(stream)
+
+  implicit def ops[F[_]](recorder: MediaRecorder[F]): Ops[F] = new Ops(recorder)
+
+  final class Ops[F[_]] (val recorder: dom.MediaRecorder) extends AnyVal {
+    def mao(implicit F: Async[F]): F[Unit] = F.delay(recorder.resume())
+    def start(implicit F: Async[F]): F[Unit] = F.delay(recorder.start())
+    def stop(implicit F: Async[F]): F[Unit] = F.delay(recorder.stop())
+    def dataAvailable(implicit F: Async[F]): Stream[F, BlobEvent[F]] =
+      EventTargetHelpers.listen[F, dom.BlobEvent](recorder, "dataavailable").map(BlobEvent(_))
+    def error(implicit F: Async[F]): Stream[F, Event[F]] =
+      EventTargetHelpers.listen[F, dom.Event](recorder, "error").map(Event(_))
+    def stopEvents(implicit F: Async[F]): Stream[F, Event[F]] =
+      EventTargetHelpers.listen[F, dom.Event](recorder, "stop").map(Event(_))
   }
 }
 
@@ -210,6 +263,48 @@ object MediaElementAudioSourceNode {
     def mediaElement: HtmlMediaElement[F] = node.mediaElement
   }
 }
+
+@JSGlobal
+@js.native
+class MediaStreamAudioSourceNode[F[_]] protected () extends AudioNode[F]
+
+object MediaStreamAudioSourceNode {
+
+  private[dom] implicit def fromJS[F[_]](
+      ctx: dom.MediaStreamAudioSourceNode
+  ): MediaStreamAudioSourceNode[F] =
+    ctx.asInstanceOf[MediaStreamAudioSourceNode[F]]
+
+  private[dom] implicit def toJS[F[_]](
+      node: MediaStreamAudioSourceNode[F]
+  ): dom.MediaStreamAudioSourceNode = node.asInstanceOf[dom.MediaStreamAudioSourceNode]
+}
+
+@JSGlobal
+@js.native
+class MediaStreamAudioDestinationNode[F[_]] protected () extends AudioNode[F]
+
+object MediaStreamAudioDestinationNode {
+
+  private[dom] implicit def fromJS[F[_]](
+      ctx: dom.MediaStreamAudioDestinationNode
+  ): MediaStreamAudioDestinationNode[F] =
+    ctx.asInstanceOf[MediaStreamAudioDestinationNode[F]]
+
+  private[dom] implicit def toJS[F[_]](
+      node: MediaStreamAudioDestinationNode[F]
+  ): dom.MediaStreamAudioDestinationNode = node.asInstanceOf[dom.MediaStreamAudioDestinationNode]
+
+    implicit def ops[F[_]](node: MediaStreamAudioDestinationNode[F]): Ops[F] = new Ops(node)
+
+  final class Ops[F[_]] private[MediaStreamAudioDestinationNode] (
+      private val node: dom.MediaStreamAudioDestinationNode
+  ) {
+    def stream(implicit F: Async[F]): F[dom.MediaStream] = F.delay(node.stream)
+  }
+}
+
+
 
 @JSGlobal
 @js.native
@@ -298,6 +393,9 @@ object AudioBufferSourceNode {
     def loop(implicit F: Async[F]): Ref[F, Boolean] =
       new WrappedRef[F, Boolean](() => node.loop, node.loop = _)
     def playbackRate: AudioParam[F] = node.playbackRate
-
+    def start(implicit F: Async[F]): F[Unit] = F.delay(node.start())
+    def start(when: Double)(implicit F: Async[F]): F[Unit] = F.delay(node.start(when))
+    def start(when: Double, offset: Double)(implicit F: Async[F]): F[Unit] = F.delay(node.start(when, offset))
+    def start(when: Double, offset: Double, duration: Double)(implicit F: Async[F]): F[Unit] = F.delay(node.start(when, offset))
   }
 }

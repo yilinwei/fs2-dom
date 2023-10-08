@@ -16,7 +16,6 @@
 
 package fs2.dom
 
-import cats.syntax.all._
 import cats.effect.kernel.Async
 import fs2.Stream
 import org.scalajs.dom
@@ -45,6 +44,9 @@ abstract class Window[F[_]] private {
 
   def domContentLoaded: F[Unit]
 
+  def btoa(rawString: String): F[String]
+
+  def atob(encodedString: String): F[String]
 }
 
 object Window {
@@ -87,6 +89,10 @@ object Window {
           Some(F.delay(window.cancelAnimationFrame(id)))
         }
       }
+
+      def btoa(rawString: String): F[String] = F.delay(window.btoa(rawString))
+
+      def atob(encodedString: String): F[String] = F.delay(window.atob(encodedString))
 
     }
 

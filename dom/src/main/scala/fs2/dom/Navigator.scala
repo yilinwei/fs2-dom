@@ -25,6 +25,8 @@ abstract class Navigator[F[_]] private {
 
   def locks: LockManager[F]
 
+  def mediaDevices: MediaDevices[F]
+
 }
 
 object Navigator {
@@ -36,6 +38,7 @@ object Navigator {
 
       def locks = LockManager(navigator.locks)
 
+      def mediaDevices = MediaDevices(navigator.mediaDevices)
     }
 
 }
