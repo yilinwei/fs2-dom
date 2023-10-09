@@ -16,7 +16,6 @@
 
 package fs2.dom
 
-import cats.syntax.all._
 import cats.effect.kernel.Async
 import fs2.Stream
 import org.scalajs.dom
@@ -45,6 +44,9 @@ abstract class Window[F[_]] private {
 
   def domContentLoaded: F[Unit]
 
+  def btoa(rawString: String): F[String]
+
+  def atob(encodedString: String): F[String]
 }
 
 object Window {
@@ -73,25 +75,11 @@ object Window {
       def document: HtmlDocument[F] = window.document.asInstanceOf[HtmlDocument[F]]
 
       def domContentLoaded: F[Unit] =
-        F.asyncCheckAttempt { cb =>
-          F.delay {
-            val ctrl = new dom.AbortController
-            val document = window.document
-            if (document.readyState == dom.DocumentReadyState.loading) {
-              window.addEventListener(
-                "DOMContentLoaded",
-                (_: Any) => cb(Either.unit),
-                new dom.EventListenerOptions {
-                  once = true
-                  signal = ctrl.signal
-                }
-              )
-              Left(Some(F.delay(ctrl.abort())))
-            } else {
-              Either.unit
-            }
-          }
-        }
+        EventTargetHelpers.listenOnceAttemptDiscard[F, dom.Window](
+          window,
+          "DOMContentLoaded",
+          _.document.readyState == dom.DocumentReadyState.loading
+        )
 
       def requestAnimationFrame: F[FiniteDuration] = F.async[FiniteDuration] { cb =>
         F.delay {
@@ -101,6 +89,10 @@ object Window {
           Some(F.delay(window.cancelAnimationFrame(id)))
         }
       }
+
+      def btoa(rawString: String): F[String] = F.delay(window.btoa(rawString))
+
+      def atob(encodedString: String): F[String] = F.delay(window.atob(encodedString))
 
     }
 

@@ -20,6 +20,7 @@ import cats.effect.IO
 import cats.effect.kernel.Async
 import cats.effect.kernel.Ref
 import org.scalajs.dom
+import cats.syntax.all.*
 
 import scala.scalajs.js
 import js.annotation._
@@ -191,7 +192,10 @@ class HtmlAreaElement[F[_]] protected () extends HtmlElement[F]
 
 @JSGlobal("HTMLAudioElement")
 @js.native
-class HtmlAudioElement[F[_]] protected () extends HtmlElement[F]
+class HtmlAudioElement[F[_]] protected () extends HtmlMediaElement[F]
+object HtmlAudioElement {
+  def apply[F[_]]: HtmlAudioElement[F] = new dom.Audio().asInstanceOf[HtmlAudioElement[F]]
+}
 
 @JSGlobal("HTMLBaseElement")
 @js.native
@@ -308,6 +312,46 @@ class HtmlOListElement[F[_]] protected () extends HtmlElement[F]
 @js.native
 class HtmlOptGroupElement[F[_]] protected () extends HtmlElement[F]
 
+@JSGlobal("HTMLMediaElement")
+@js.native
+class HtmlMediaElement[F[_]] protected () extends HtmlElement[F]
+object HtmlMediaElement {
+
+  private[dom] implicit def toJS[F[_]](elem: HtmlMediaElement[F]): dom.HTMLMediaElement =
+    elem.asInstanceOf[dom.HTMLMediaElement]
+
+  private[dom] implicit def fromJS[F[_]](elem: dom.HTMLMediaElement): HtmlMediaElement[F] =
+    elem.asInstanceOf[HtmlMediaElement[F]]
+
+  implicit def ops[F[_]](elem: HtmlMediaElement[F]): Ops[F] =
+    new Ops(elem)
+
+  // TODO:: check
+  import Dom._
+
+  final class Ops[F[_]] private[HtmlMediaElement] (private val media: dom.HTMLMediaElement)
+      extends AnyVal {
+
+    def src(implicit F: Dom[F]): Ref[F, Option[String]] =
+      new WrappedRef[F, Option[String]](
+        () => {
+          val src = media.src
+          Option.unless(src == "")(src)
+        },
+        opt => media.src = opt.getOrElse("")
+      )(F)
+
+    def currentSrc(implicit F: Dom[F]): F[String] = F.delay(media.currentSrc)
+
+    def play(implicit F: Dom[F]): F[Unit] =
+      F.delay(media.play().toOption).flatMap {
+        case Some(p) => F.fromPromise(F.pure(p))
+        case None    => F.unit
+      }
+
+    def load(implicit F: Dom[F]): F[Unit] = F.delay(media.load())
+  }
+}
 @JSGlobal("HTMLOptionElement")
 @js.native
 class HtmlOptionElement[F[_]] protected () extends HtmlElement[F]

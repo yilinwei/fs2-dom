@@ -17,6 +17,7 @@
 package fs2
 package dom
 
+import cats.syntax.all.*
 import cats.effect.kernel.Async
 import org.scalajs.dom
 
@@ -43,4 +44,29 @@ private[dom] object EventTargetHelpers {
         Some(F.delay(ctrl.abort()))
       }
     }
+
+  def listenOnceAttemptDiscard[F[_], A <: dom.EventTarget](
+      target: A,
+      `type`: String,
+      pred: A => Boolean
+  )(implicit F: Async[F]): F[Unit] =
+    F.asyncCheckAttempt { cb =>
+      F.delay {
+        val ctrl = new dom.AbortController
+        if (pred(target)) {
+          target.addEventListener(
+            `type`,
+            (_: Any) => cb(Either.unit),
+            new dom.EventListenerOptions {
+              once = true
+              signal = ctrl.signal
+            }
+          )
+          Left(Some(F.delay(ctrl.abort())))
+        } else {
+          Either.unit
+        }
+      }
+    }
+
 }

@@ -19,26 +19,19 @@ package fs2.dom
 import cats.effect.kernel.Async
 import org.scalajs.dom
 
-abstract class Navigator[F[_]] private {
+abstract class MediaDevices[F[_]] private {
 
-  def clipboard: Clipboard[F]
-
-  def locks: LockManager[F]
-
-  def mediaDevices: MediaDevices[F]
+  def getUserMedia(constraints: dom.MediaStreamConstraints): F[dom.MediaStream]
 
 }
 
-object Navigator {
+object MediaDevices {
 
-  private[dom] def apply[F[_]](navigator: dom.Navigator)(implicit F: Async[F]): Navigator[F] =
-    new Navigator[F] {
+  private[dom] def apply[F[_]](mediaDevices: dom.MediaDevices)(implicit F: Async[F]): MediaDevices[F] =
+    new MediaDevices[F] {
 
-      def clipboard = Clipboard(navigator.clipboard)
+      def getUserMedia(constraints: dom.MediaStreamConstraints) = F.fromPromise(F.delay(mediaDevices.getUserMedia(constraints)))
 
-      def locks = LockManager(navigator.locks)
-
-      def mediaDevices = MediaDevices(navigator.mediaDevices)
     }
 
 }
