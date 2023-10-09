@@ -179,8 +179,8 @@ object MediaRecorder {
     def mao(implicit F: Async[F]): F[Unit] = F.delay(recorder.resume())
     def start(implicit F: Async[F]): F[Unit] = F.delay(recorder.start())
     def stop(implicit F: Async[F]): F[Unit] = F.delay(recorder.stop())
-    def dataAvailable(implicit F: Async[F]): Stream[F, BlobEvent[F]] =
-      EventTargetHelpers.listen[F, dom.BlobEvent](recorder, "dataavailable").map(BlobEvent(_))
+    def dataAvailable(implicit F: Async[F]): Stream[F, dom.BlobEvent] =
+      EventTargetHelpers.listen[F, dom.BlobEvent](recorder, "dataavailable")
     def error(implicit F: Async[F]): Stream[F, Event[F]] =
       EventTargetHelpers.listen[F, dom.Event](recorder, "error").map(Event(_))
     def stopEvents(implicit F: Async[F]): Stream[F, Event[F]] =
